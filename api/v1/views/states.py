@@ -2,7 +2,7 @@
 """ This module handles all views of State objects.
 """
 from models import storage
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, abort
 from api.v1.views import app_views
 from models.base_model import BaseModel
 from models.state import State
@@ -39,6 +39,7 @@ def delete_state(state_id):
     if obj is None:
         abort(404)
     storage.delete(obj)
+    storage.save()
     return jsonify({}), 200
 
 
