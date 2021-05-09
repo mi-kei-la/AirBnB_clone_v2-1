@@ -18,6 +18,7 @@ import json
 import os
 import pep8
 import unittest
+import uuid
 FileStorage = file_storage.FileStorage
 classes = {"Amenity": Amenity, "BaseModel": BaseModel, "City": City,
            "Place": Place, "Review": Review, "State": State, "User": User}
@@ -77,6 +78,7 @@ class TestFileStorage(unittest.TestCase):
         new_dict = storage.all()
         self.assertEqual(type(new_dict), dict)
         self.assertIs(new_dict, storage._FileStorage__objects)
+        self.assertGreater(len(new_dict), 0)
 
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_new(self):
@@ -113,3 +115,88 @@ class TestFileStorage(unittest.TestCase):
         with open("file.json", "r") as f:
             js = f.read()
         self.assertEqual(json.loads(string), json.loads(js))
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_reload(self):
+        """Test that objects are properly reloaded."""
+        fs = FileStorage()
+        inst1 = BaseModel()
+        fs.new(inst1)
+        fs.save()
+        time = inst1.created_at
+        fs.reload()
+        for value in fs.all().values():
+            if inst1 == value:
+                self.assertEqual(value.created_at, time)
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_delete(self):
+        """Test delete method of FileStorage."""
+        fs = FileStorage()
+        new_state = State()
+        fs.new(new_state)
+        state_id = new_state.id
+        fs.save()
+        fs.delete(new_state)
+        fs.save()
+        with open("file.json", encoding="UTF-8") as fd:
+            state_dict = json.load(fd)
+        for keys in state_dict.keys():
+            new_key = keys.split('.')[1]
+            self.assertNotEqual(state_id, new_key)
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_close(self):
+        """Test correct call of the reload method."""
+        fs = FileStorage()
+        inst1 = BaseModel()
+        fs.new(inst1)
+        fs.save()
+        time = inst1.created_at
+        fs.reload()
+        for value in fs.all().values():
+            if inst1 == value:
+                self.assertEqual(value.created_at, time)
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_get(self):
+        """Test that get method retrieves the correct object."""
+        # Test correct ID
+        fs = FileStorage()
+        inst1 = State()
+        inst1.name = "Alabama"
+        fs.new(inst1)
+        new_id = inst1.id
+        fs.save()
+        state = fs.get("State", new_id)
+        self.assertEqual(state.name, "Alabama")
+        # Test incorrect class
+        inst2 = State()
+        fs.new(inst2)
+        new_id = inst2.id
+        fs.save()
+        ret = fs.get(Amenity, new_id)
+        self.assertEqual(ret, None)
+        # Test non-existant ID
+        new_id = str(uuid.uuid4())
+        ret = fs.get(State, new_id)
+        self.assertEqual(ret, None)
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_count(self):
+        """Test that count method returns the correct count."""
+        # Test with class parameter
+        fs = FileStorage()
+        old_count = fs.count(State)
+        new = State(name="Alabama")
+        fs.new(new)
+        fs.save()
+        new_count = fs.count(State)
+        self.assertEqual(old_count + 1, new_count)
+        # Test without class parameter
+        old_count = fs.count()
+        new = State(name="Michigan")
+        fs.new(new)
+        fs.save()
+        new_count = fs.count()
+        self.assertEqual(old_count + 1, new_count)
