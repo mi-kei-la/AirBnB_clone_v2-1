@@ -1,6 +1,7 @@
 #!/usr/bin/python3
-from models import storage
+"""This script creates a v1 API."""
 from flask import Flask, jsonify
+from models import storage
 from api.v1.views import app_views
 from os import environ, getenv
 from flask_cors import CORS
@@ -8,10 +9,12 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 app.register_blueprint(app_views)
+CORS(app, resources={r"/*": {"origins": "0.0.0.0"}})
 
 
 @app.errorhandler(404)
 def not_found(e):
+    """This function handles all 404 errors."""
     return jsonify(error="Not found"), 404
 
 
