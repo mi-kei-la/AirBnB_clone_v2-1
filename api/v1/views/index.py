@@ -25,9 +25,9 @@ def return_status():
 @app_views.route('/stats')
 def return_stats():
     """Retrieve the amount of objects from each type."""
-    classes = {"amenity": Amenity, "city": City,
-               "place": Place, "review": Review,
-               "state": State, "user": User}
+    classes = {"amenities": Amenity, "cities": City,
+               "places": Place, "reviews": Review,
+               "states": State, "users": User}
 
     stats = {}
     for name, clss in classes.items():
