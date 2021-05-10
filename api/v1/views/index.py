@@ -1,4 +1,9 @@
 #!/usr/bin/python3
+"""Index file to test the status of the API.
+Routes:
+    /status [GET] - Return status of the API
+    /stats [GET] - Retrieve the number of objects per type.
+"""
 from flask import jsonify
 from api.v1.views import app_views
 from models import storage
